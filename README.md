@@ -35,6 +35,7 @@ make warm        # download and load CLIP once (~600MB, cached afterwards)
 make api         # terminal 1: local API on :3001
 make web         # terminal 2: React app on :5173
 make test        # backend unit tests (node --test)
+make test-model  # checks the real CLIP model (needs make warm first)
 ```
 
 Optional, for real semantic results:
