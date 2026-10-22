@@ -153,3 +153,11 @@ that planning session before the build started.
 **Tradeoff:** Until tickets 8 and 9 land, the API accepts malformed input and unfetchable URLs without the spec's 400 and 422 responses. Both are still core, because the spec's API and decision 10 commit to that behavior.
 **Rejected:** The embedder before the vector math (its acceptance check needs `normalize` and `dot`). Validation and safeguards before real data (a stricter API sooner, but a weaker early demo). The error boundary in the validation ticket (too late: debugging starts at ingest).
 **AI vs. me:** The drafting agent proposed the order with the embedder first and validation as cuttable. I reordered vector math before the embedder, moved the error boundary into the ingest ticket, and made validation and the download safeguards firmly core.
+
+## 19. Run CLIP at full precision (fp32)
+
+**Decision:** Both CLIP encoders load with `dtype: "fp32"`, set explicitly rather than left to the library's default.
+**Rationale:** Full precision gives the reference CLIP vectors, so ranking quality isn't affected by quantization. Setting it explicitly pins the vectors: a library upgrade that changed the default would otherwise silently change every new embedding while `embeddingModel` stayed the same. The cost is a one-off download, measured at 595MB and 15.4s cold, then 0.5s from cache.
+**Tradeoff:** About four times the download and memory of the 8-bit quantized weights, and slower inference. If the dtype ever changes, every stored image must be re-ingested, just as for a model change.
+**Rejected:** The 8-bit quantized weights (`q8`): smaller and faster, but slightly lower fidelity, and the size saving doesn't matter on the local demo path.
+**AI vs. me:** Proposed by the drafting agent during ticket 3. I asked for a plain explanation and confirmed it doesn't affect Lambda's size limit, then accepted it.

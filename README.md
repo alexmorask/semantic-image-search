@@ -31,6 +31,7 @@ Replace the naive search with real semantic search, and make the design your own
 make install     # install backend and frontend dependencies
 make up          # start LocalStack
 make seed        # create the table + bucket (no data; images load through POST /images)
+make warm        # download and load CLIP once (~600MB, cached afterwards)
 make api         # terminal 1: local API on :3001
 make web         # terminal 2: React app on :5173
 make test        # backend unit tests (node --test)
