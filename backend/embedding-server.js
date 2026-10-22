@@ -1,5 +1,5 @@
 const express = require("express");
-const { EMBEDDING_MODEL, loadModel, embedImage, embedText } = require("./lib/embedder");
+const { EMBEDDING_MODEL, loadModel, embedImage, embedText } = require("./lib/embedding/local");
 const { UnusableImageError } = require("./lib/errors");
 
 const MAX_IMAGE = "10mb";

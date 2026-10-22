@@ -12,6 +12,6 @@
   },
   "scripts": {
     "test": "node --test",
-    "test:model": "node --test lib/embedder.model-check.js"
+    "test:model": "node --test lib/embedding/local.model-check.js"
   }
 }

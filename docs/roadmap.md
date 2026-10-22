@@ -31,7 +31,7 @@ core lands early.
 | 3 | **Ownership filtering** | `ownerId` becomes an optional, validated field on ingest and is stored on the record. Search takes `ownerId` and filters the cache before scoring. The bulk script assigns owners in rotation so there's data to demo. The owner is supplied by the caller and trusted (no auth). | 6, 8 | 25 |
 | 4 | **Pagination** | Search takes an optional `cursor` (the offset as an opaque string) and returns `nextCursor`, a new field. Results are deterministic because ties are broken by `id`. | 2, 8 | 15 |
 | 5 | **Hybrid search** | A pure keyword-ranking function (reusing the kit's matcher) and a pure reciprocal rank fusion function (k = 60), both test-first. Search merges the two rankings (decision 16). Highest risk: the gain is only visible with queries chosen to show it. | 2, 7 | 30 |
-| 6 | **Lambda via a separate embedding service** (built) | `backend/embedding-server.js` (`make embed`) serves CLIP over HTTP; `lib/remote-embedder.js` calls it when `EMBEDDING_URL` is set; `deploy.sh` ships a 12KB zip to `nodejs20.x` behind a Function URL; `make web-lambda` proxies the frontend to it. Decision 24. | 10 | 50 |
+| 6 | **Lambda via a separate embedding service** (built) | `backend/embedding-server.js` (`make embed`) serves CLIP over HTTP; `lib/embedding/remote.js` calls it when `EMBEDDING_URL` is set; `deploy.sh` ships a 12KB zip to `nodejs20.x` behind a Function URL; `make web-lambda` proxies the frontend to it. Decision 24. | 10 | 50 |
 
 Scale items (ANN index, async ingest, a separate embedding service, bulk
 re-embedding, per-instance cache drift, Group-scoped search) are not backlog.

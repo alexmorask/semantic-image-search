@@ -1,4 +1,4 @@
-const { EMBEDDING_MODEL, loadModel } = require("../backend/lib/embedder");
+const { EMBEDDING_MODEL, loadModel } = require("../backend/lib/embedding/local");
 
 (async () => {
   const started = Date.now();

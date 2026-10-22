@@ -1,5 +1,5 @@
 const { EMBEDDING_MODEL } = require("./model");
-const { UnusableImageError } = require("./errors");
+const { UnusableImageError } = require("../errors");
 
 const TIMEOUT_MS = 30_000;
 

@@ -171,7 +171,7 @@ There are two kinds, and they are handled differently:
   transformers.js the zip was 555MB against a 50MB upload limit, and `sharp` is a
   macOS build. The Lambda zip is `handler.js` + `lib` only (about 12KB); the
   nodejs20.x runtime provides the AWS SDK. Anything that `require`s
-  `lib/embedder.js` must stay off the Lambda path (`lib/embedding.js` switches).
+  `lib/embedding/local.js` must stay off the Lambda path; `lib/embedding/index.js` switches.
 - **Lambda path needs three things running:** LocalStack, the embedding service
   (`make embed`), and the frontend through the proxy (`make web-lambda
   LAMBDA_URL=…`). Free LocalStack has no API Gateway v2 (the Lambda uses a

@@ -5,8 +5,8 @@ const {
   CLIPVisionModelWithProjection,
   RawImage,
 } = require("@huggingface/transformers");
-const { normalize } = require("./vectors");
-const { UnusableImageError } = require("./errors");
+const { normalize } = require("../vectors");
+const { UnusableImageError } = require("../errors");
 const { EMBEDDING_MODEL } = require("./model");
 
 const MODEL_OPTIONS = { dtype: "fp32" };

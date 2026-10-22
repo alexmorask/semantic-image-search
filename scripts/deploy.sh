@@ -14,7 +14,7 @@ AWS="aws --endpoint-url=$ENDPOINT"
 command -v awslocal >/dev/null 2>&1 && AWS="awslocal"
 
 echo "==> packaging lambda (no node_modules: the nodejs20.x runtime provides the AWS SDK)"
-( cd backend && rm -f ../function.zip && zip -qr ../function.zip handler.js lib -x 'lib/*.test.js' 'lib/*.model-check.js' )
+( cd backend && rm -f ../function.zip && zip -qr ../function.zip handler.js lib -x 'lib/*.test.js' 'lib/**/*.test.js' 'lib/**/*.model-check.js' )
 ls -lh function.zip | awk '{print "    function.zip: " $5}'
 
 echo "==> lambda function"

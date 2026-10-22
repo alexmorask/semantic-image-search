@@ -1,8 +1,8 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const sharp = require("sharp");
-const { loadModel, embedImage, embedText } = require("./embedder");
-const { dot } = require("./vectors");
+const { loadModel, embedImage, embedText } = require("./local");
+const { dot } = require("../vectors");
 
 const solidSquare = (r, g, b) =>
   sharp({ create: { width: 224, height: 224, channels: 3, background: { r, g, b } } }).png().toBuffer();

@@ -1,9 +1,9 @@
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
 const http = require("node:http");
-const { createRemoteEmbedder } = require("./remote-embedder");
+const { createRemoteEmbedder } = require("./remote");
 const { EMBEDDING_MODEL } = require("./model");
-const { UnusableImageError } = require("./errors");
+const { UnusableImageError } = require("../errors");
 
 const replies = {
   "/embed/text": [200, { model: EMBEDDING_MODEL, embedding: [0.6, 0.8] }],
