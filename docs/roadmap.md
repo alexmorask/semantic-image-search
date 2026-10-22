@@ -26,7 +26,7 @@ core lands early.
 
 | Rank | Feature | How I'd build it on this data model | Depends on | Size |
 | --- | --- | --- | --- | --- |
-| 1 | **`minScore`** | An optional field in `validateSearch` (with a test), and a filter after `topK` in the search route. The response shape doesn't change. | 8 | 10 |
+| 1 | **`minScore`** (built) | An optional field in `validateSearch` (with a test), and a filter after `topK` in the search route. The response shape doesn't change. **Built:** defaults to -1 so leaving it out filters nothing; 400 outside [-1, 1] (decision 22). | 8 | 10 |
 | 2 | **Delete** | Add `DELETE /images/:id` in `handler.js` (parse the id from the path), `local-server.js` and `deploy.sh`. It runs DynamoDB `DeleteItem`, S3 `DeleteObject originals/{id}` and `cache.delete`, and keeps a `recentDeletes` set during the initial load so the Scan doesn't re-add the image. 404 if the id doesn't exist. | 5 | 20 |
 | 3 | **Ownership filtering** | `ownerId` becomes an optional, validated field on ingest and is stored on the record. Search takes `ownerId` and filters the cache before scoring. The bulk script assigns owners in rotation so there's data to demo. The owner is supplied by the caller and trusted (no auth). | 6, 8 | 25 |
 | 4 | **Pagination** | Search takes an optional `cursor` (the offset as an opaque string) and returns `nextCursor`, a new field. Results are deterministic because ties are broken by `id`. | 2, 8 | 15 |

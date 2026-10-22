@@ -179,3 +179,11 @@ that planning session before the build started.
 **Tradeoff:** A caller with ids in another format (e.g. containing `.` or `/`) must map them first.
 **Rejected:** Accepting any string id (odd S3 keys). Encoding the id into the S3 key (more to explain, for no current need).
 **AI vs. me:** Proposed by the drafting agent during ticket 8; I accepted it.
+
+## 22. minScore is opt-in, defaults to -1, and must be in [-1, 1]
+
+**Decision:** `POST /search` accepts an optional `minScore`. Leaving it out is the same as -1, the lowest possible cosine similarity, so nothing is filtered and decision 12's default behavior is unchanged. A value that isn't a finite number in [-1, 1] returns 400. The filter runs after `topK`, so fewer than `limit` results may come back.
+**Rationale:** Decision 12 still holds: there's no server-side threshold, because scores need calibration. `minScore` hands that choice to the caller, who can set it once they know their data (in the demo set, real matches score about 0.26–0.30 and the no-match query tops out at 0.244). Normalized vectors can't score outside [-1, 1], so a value there is a client bug, like decision 13's invalid `limit`. Filtering after `topK` gives the same results as filtering first, because a threshold doesn't change the order.
+**Tradeoff:** A strict `minScore` can return an empty list for a good query, and the caller must pick the number themselves.
+**Rejected:** A default threshold (decision 12's calibration problem). Accepting any finite number (silently returns everything or nothing). Filtering before `topK` (same result, no benefit).
+**AI vs. me:** Proposed by the drafting agent (a parallel subagent) during backlog item 1; I accepted it.

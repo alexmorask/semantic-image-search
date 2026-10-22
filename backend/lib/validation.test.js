@@ -3,11 +3,11 @@ const assert = require("node:assert/strict");
 const { validateSearch, validateIngest } = require("./validation");
 
 test("validateSearch accepts a query and applies the default limit", () => {
-  assert.deepEqual(validateSearch({ query: "a dog" }), { value: { query: "a dog", limit: 12 } });
+  assert.deepEqual(validateSearch({ query: "a dog" }), { value: { query: "a dog", limit: 12, minScore: -1 } });
 });
 
 test("validateSearch trims the query and keeps a valid limit", () => {
-  assert.deepEqual(validateSearch({ query: "  a dog  ", limit: 3 }), { value: { query: "a dog", limit: 3 } });
+  assert.deepEqual(validateSearch({ query: "  a dog  ", limit: 3 }), { value: { query: "a dog", limit: 3, minScore: -1 } });
 });
 
 test("validateSearch caps the limit at 50", () => {
@@ -23,6 +23,24 @@ test("validateSearch rejects a missing, empty, blank, or non-string query", () =
 test("validateSearch rejects a limit that isn't a positive integer", () => {
   for (const limit of [0, -1, 2.5, "12", null, NaN]) {
     assert.match(validateSearch({ query: "a dog", limit }).error, /limit/, `limit ${JSON.stringify(limit)}`);
+  }
+});
+
+test("validateSearch keeps a valid minScore, including both ends of the cosine range", () => {
+  for (const minScore of [0.26, 0, -1, 1]) {
+    assert.equal(validateSearch({ query: "a dog", minScore }).value.minScore, minScore);
+  }
+});
+
+test("validateSearch rejects a minScore that isn't a finite number", () => {
+  for (const minScore of ["0.26", null, NaN, Infinity, true]) {
+    assert.match(validateSearch({ query: "a dog", minScore }).error, /minScore/, `minScore ${JSON.stringify(minScore)}`);
+  }
+});
+
+test("validateSearch rejects a minScore outside the cosine range [-1, 1]", () => {
+  for (const minScore of [1.5, -2]) {
+    assert.match(validateSearch({ query: "a dog", minScore }).error, /minScore/, `minScore ${minScore}`);
   }
 });
 

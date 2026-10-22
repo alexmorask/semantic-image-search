@@ -59,8 +59,8 @@ request   { "query": "dog on a beach", "limit": 12 }
 200       { "query", "count", "results": [ { "id", "url", "description", "score" } ] }
 ```
 
-- Results are sorted by `score` (cosine similarity). There's **no minimum score**, so weak matches still return, with low scores.
-- `limit` defaults to 12 and is capped at 50. **400** for a missing or empty `query`, or a `limit` that isn't a positive integer.
+- Results are sorted by `score` (cosine similarity). There's **no minimum score by default**, so weak matches still return, with low scores. An optional `minScore` in [-1, 1] drops results below it, so fewer than `limit` may return.
+- `limit` defaults to 12 and is capped at 50. **400** for a missing or empty `query`, a `limit` that isn't a positive integer, or a `minScore` that isn't a number in [-1, 1].
 
 **`POST /images`** ingests one image.
 
@@ -106,7 +106,6 @@ request   { "url": "https://…", "id"?, "description"?, "keywords"?: [] }
 | **Ownership / permissions** | Add `ownerId`/`groupId` at ingest and filter before scoring. This is the per-Group index, in miniature |
 | **Pagination** | Ranking is deterministic, so a cursor over the sorted list, returned in a new `nextCursor` field |
 | **Hybrid search** | Captions and keywords are already stored. Merge the two rankings by position (reciprocal rank fusion) |
-| **`minScore`** | An optional request field, once scores are calibrated on real data |
 
 **Not planned:** authentication and user accounts, an upload UI, and the Lambda deploy as the primary path.
 

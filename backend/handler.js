@@ -23,7 +23,7 @@ async function dispatch(method, path, body) {
   if (method === "POST" && path.endsWith("/search")) {
     const { value, error } = validateSearch(body);
     if (error) return badRequest(error);
-    const results = await searchImages(value.query, value.limit);
+    const results = await searchImages(value.query, value.limit, value.minScore);
     return { statusCode: 200, body: { query: value.query, count: results.length, results } };
   }
   if (method === "POST" && path.endsWith("/images")) {

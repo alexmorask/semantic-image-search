@@ -1,5 +1,7 @@
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
+const LOWEST_SCORE = -1;
+const HIGHEST_SCORE = 1;
 const SAFE_ID = /^[A-Za-z0-9_-]{1,128}$/;
 
 const isString = (value) => typeof value === "string";
@@ -13,16 +15,21 @@ function isHttpUrl(value) {
   }
 }
 
+const isScore = (value) => Number.isFinite(value) && value >= LOWEST_SCORE && value <= HIGHEST_SCORE;
+
 /**
  * Validates a POST /search body.
- * @param {{query?: unknown, limit?: unknown}} body
- * @returns {{value: {query: string, limit: number}} | {error: string}}
- *   The trimmed query and a limit defaulted to 12 and capped at 50, or a message for a 400.
+ * minScore defaults to -1, the lowest possible cosine similarity, so leaving it out filters nothing.
+ * @param {{query?: unknown, limit?: unknown, minScore?: unknown}} body
+ * @returns {{value: {query: string, limit: number, minScore: number}} | {error: string}}
+ *   The trimmed query, a limit defaulted to 12 and capped at 50, and a minScore in [-1, 1],
+ *   or a message for a 400.
  */
-function validateSearch({ query, limit = DEFAULT_LIMIT }) {
+function validateSearch({ query, limit = DEFAULT_LIMIT, minScore = LOWEST_SCORE }) {
   if (!isString(query) || !query.trim()) return { error: "query must be a non-empty string" };
   if (!Number.isInteger(limit) || limit < 1) return { error: "limit must be a positive integer" };
-  return { value: { query: query.trim(), limit: Math.min(limit, MAX_LIMIT) } };
+  if (!isScore(minScore)) return { error: "minScore must be a number between -1 and 1" };
+  return { value: { query: query.trim(), limit: Math.min(limit, MAX_LIMIT), minScore } };
 }
 
 /**
