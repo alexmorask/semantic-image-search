@@ -161,3 +161,11 @@ that planning session before the build started.
 **Tradeoff:** About four times the download and memory of the 8-bit quantized weights, and slower inference. If the dtype ever changes, every stored image must be re-ingested, just as for a model change.
 **Rejected:** The 8-bit quantized weights (`q8`): smaller and faster, but slightly lower fidelity, and the size saving doesn't matter on the local demo path.
 **AI vs. me:** Proposed by the drafting agent during ticket 3. I asked for a plain explanation and confirmed it doesn't affect Lambda's size limit, then accepted it.
+
+## 20. Keep the Unsplash sample out of git
+
+**Decision:** `make dataset` writes the 400-image sample to `data/unsplash_sample.json`, which is git-ignored, and `make ingest` reads it from there. The tracked `data/sample_images.json` keeps the kit's 44 placeholders.
+**Rationale:** The Unsplash Lite terms forbid disclosing, publishing, or redistributing "any portion of the Licensed Data". The sample holds Unsplash's photo ids, URLs, descriptions, and keywords, so committing it and pushing would publish part of the dataset.
+**Tradeoff:** A reviewer has to download Unsplash Lite and run `make dataset` themselves to reproduce the 400-image demo.
+**Rejected:** Keeping the kit's output path and never committing the change (one `git add -A` publishes it).
+**AI vs. me:** The drafting agent found the terms while preparing to generate the data and proposed the separate git-ignored file; I accepted it.

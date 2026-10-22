@@ -1,4 +1,4 @@
-.PHONY: install up down seed warm api web test test-model deploy dataset embeddings logs
+.PHONY: install up down seed warm api web test test-model ingest deploy dataset embeddings logs
 install:   ; cd backend && npm install && cd ../frontend && npm install
 up:        ; docker compose up -d
 down:      ; docker compose down
@@ -10,5 +10,6 @@ test:      ; cd backend && npm test
 test-model:; cd backend && npm run test:model
 deploy:    ; bash scripts/deploy.sh
 dataset:   ; python3 scripts/fetch_unsplash.py
+ingest:    ; node scripts/ingest.js
 embeddings:; python3 scripts/generate_embeddings.py
 logs:      ; docker compose logs -f localstack

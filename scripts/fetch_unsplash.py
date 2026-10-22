@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Sample the Unsplash Lite dataset into data/sample_images.json.
+Sample the Unsplash Lite dataset into data/unsplash_sample.json (git-ignored: the
+dataset terms forbid publishing any portion of it).
 
 1) Download Unsplash Lite (~700MB) and unzip it:
      https://github.com/unsplash/datasets  (direct: https://unsplash.com/data/lite/latest)
@@ -12,7 +13,7 @@ from collections import defaultdict
 
 DATA_DIR = os.environ.get("UNSPLASH_DIR", "./unsplash-lite")
 SAMPLE_N = int(os.environ.get("SAMPLE_N", "400"))
-OUT = os.path.join(os.path.dirname(__file__), "..", "data", "sample_images.json")
+OUT = os.path.join(os.path.dirname(__file__), "..", "data", "unsplash_sample.json")
 
 photos_path = os.path.join(DATA_DIR, "photos.tsv000")
 keywords_path = os.path.join(DATA_DIR, "keywords.tsv000")

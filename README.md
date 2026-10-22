@@ -38,10 +38,10 @@ make test        # backend unit tests (node --test)
 make test-model  # checks the real CLIP model (needs make warm first)
 ```
 
-Optional, for real semantic results:
+Load the 400-image Unsplash sample (download Unsplash Lite and unzip it into ./unsplash-lite first):
 ```
-make dataset     # pull + sample Unsplash Lite into data/sample_images.json
-make embeddings  # generate data/embeddings.json
+make dataset     # sample 400 images into data/unsplash_sample.json (git-ignored)
+make ingest      # with make api running: POST /images for every image in the sample
 ```
 Deploy to LocalStack Lambda + API Gateway (serverless path):
 ```
