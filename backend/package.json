@@ -4,9 +4,13 @@
   "private": true,
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.600.0",
-    "@aws-sdk/lib-dynamodb": "^3.600.0",
     "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0",
+    "@huggingface/transformers": "^4.3.1",
     "cors": "^2.8.5",
     "express": "^4.19.2"
+  },
+  "scripts": {
+    "test": "node --test"
   }
 }

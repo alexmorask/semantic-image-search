@@ -30,11 +30,11 @@ Replace the naive search with real semantic search, and make the design your own
 ```
 make install     # install backend and frontend dependencies
 make up          # start LocalStack
-make seed        # create the table + bucket and load sample data
+make seed        # create the table + bucket (no data; images load through POST /images)
 make api         # terminal 1: local API on :3001
 make web         # terminal 2: React app on :5173
+make test        # backend unit tests (node --test)
 ```
-Open the web app, search "mountain" or "dog", and you'll see the naive match working end to end. Now go build the real thing.
 
 Optional, for real semantic results:
 ```

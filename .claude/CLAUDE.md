@@ -162,6 +162,9 @@ There are two kinds, and they are handled differently:
   bucket creation stays; the data load goes through `POST /images`.
 - **Cold model load.** The first CLIP load downloads the model weights. Warm the
   cache before any demo, and never demo a cold first load.
+- **Platform support.** `onnxruntime-node` 1.30 bundles binaries for macOS
+  arm64, Linux and Windows, but appears to have none for Intel Macs (untested).
+  `/finalize` notes this as a known limitation in the README.
 - **Lambda packaging.** transformers.js pulls in native binaries
   (onnxruntime-node, sharp) that may not match the Lambda architecture, and the
   kit deploys `nodejs18.x`. Don't sink time here. The local server is the demo
