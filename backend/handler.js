@@ -1,9 +1,20 @@
 const { ingestImage } = require("./lib/ingest");
 const { searchImages } = require("./lib/search");
 const { validateSearch, validateIngest } = require("./lib/validation");
+const { UnusableImageError } = require("./lib/errors");
 
 const INVALID_JSON = { statusCode: 400, body: { error: "request body must be valid JSON" } };
 const badRequest = (error) => ({ statusCode: 400, body: { error } });
+
+async function ingest(input) {
+  try {
+    const { id, url, description, embeddingModel, createdAt } = await ingestImage(input);
+    return { statusCode: 201, body: { id, url, description, embeddingModel, createdAt } };
+  } catch (error) {
+    if (error instanceof UnusableImageError) return { statusCode: 422, body: { error: error.message } };
+    throw error;
+  }
+}
 
 async function dispatch(method, path, body) {
   if (method === "GET" && path.endsWith("/health")) {
@@ -18,8 +29,7 @@ async function dispatch(method, path, body) {
   if (method === "POST" && path.endsWith("/images")) {
     const { value, error } = validateIngest(body);
     if (error) return badRequest(error);
-    const { id, url, description, embeddingModel, createdAt } = await ingestImage(value);
-    return { statusCode: 201, body: { id, url, description, embeddingModel, createdAt } };
+    return ingest(value);
   }
   return { statusCode: 404, body: { error: "not found" } };
 }

@@ -6,6 +6,7 @@ const {
   RawImage,
 } = require("@huggingface/transformers");
 const { normalize } = require("./vectors");
+const { UnusableImageError } = require("./errors");
 
 const EMBEDDING_MODEL = "Xenova/clip-vit-base-patch32";
 const MODEL_OPTIONS = { dtype: "fp32" };
@@ -34,15 +35,23 @@ function loadModel() {
   return loading;
 }
 
+async function decodeImage(bytes) {
+  try {
+    return await RawImage.fromBlob(new Blob([bytes]));
+  } catch (error) {
+    throw new UnusableImageError(`image could not be decoded: ${error.message}`);
+  }
+}
+
 /**
  * Embeds an image with CLIP's image encoder.
  * @param {Buffer|Uint8Array} bytes Encoded image bytes (JPEG, PNG, WebP, ...).
  * @returns {Promise<number[]>} A normalized 512-number vector.
- * @throws {Error} if the bytes can't be decoded as an image.
+ * @throws {UnusableImageError} if the bytes can't be decoded as an image.
  */
 async function embedImage(bytes) {
   const { processor, visionModel } = await loadModel();
-  const image = await RawImage.fromBlob(new Blob([bytes]));
+  const image = await decodeImage(bytes);
   const { image_embeds } = await visionModel(await processor(image));
   return normalize(image_embeds.data);
 }
