@@ -63,7 +63,6 @@ async function route(method, path, body) {
   }
 }
 
-// Lambda entrypoint (API Gateway v2 / Function URL event shape)
 exports.handler = async (event) => {
   const method =
     (event.requestContext && event.requestContext.http && event.requestContext.http.method) ||
@@ -87,6 +86,5 @@ function toLambdaResponse(r) {
   };
 }
 
-// shared with the local dev server
 exports.route = route;
 exports.INVALID_JSON = INVALID_JSON;

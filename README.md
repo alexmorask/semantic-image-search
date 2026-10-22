@@ -24,7 +24,7 @@ Replace the naive search with real semantic search, and make the design your own
 - Docker and Docker Compose
 - Node 18+
 - AWS CLI (only needed for `make deploy`)
-- Python 3 (only for the dataset and embedding scripts)
+- Python 3 (only for `make dataset`)
 
 ## Quickstart
 ```
@@ -54,7 +54,7 @@ make web-lambda LAMBDA_URL=<printed url>   # frontend proxied to the Lambda
 ```
 backend/     handler.js (the TODO lives here), local-server.js, lib/
 frontend/    Vite React app (search box + grid)
-scripts/     seed.js, deploy.sh, fetch_unsplash.py, generate_embeddings.py
+scripts/     seed.js, deploy.sh, ingest.js, warm-model.js, fetch_unsplash.py
 data/        sample_images.json, data README (schema + dataset notes)
 spec/        SPEC_TEMPLATE.md  (copy to SPEC.md and fill in)
 ```

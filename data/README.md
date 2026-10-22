@@ -19,7 +19,3 @@ Schema (one object per image):
 - Never commit the sample: the dataset terms forbid publishing or redistributing any portion of it.
 
 Alternatives: COCO val2017 (~5k images with captions, files included) or Flickr8k (8k images, five captions each).
-
-## `embeddings.json` (you generate this)
-`{ "<id>": [float, ...] }`, produced by `make embeddings`. Wire these into the search and embed
-the query the same way to rank by similarity.

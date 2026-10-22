@@ -72,8 +72,8 @@ finished one with no spec.
 - **Data:** the committed `data/sample_images.json` holds 44 picsum placeholders
   whose captions don't match their images. The real 400-image Unsplash sample
   comes from `make dataset` (`scripts/fetch_unsplash.py`, `SAMPLE_N=400`), which
-  overwrites that file. `scripts/generate_embeddings.py` / `make embeddings` are
-  **not used**.
+  writes the git-ignored `data/unsplash_sample.json` (decision 20); `make ingest`
+  loads it. Never commit it.
 
 ## Settled decisions (constraints, not suggestions)
 
