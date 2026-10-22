@@ -91,7 +91,8 @@ one is a reversal, and it gets recorded as a new decision that supersedes the ol
    package.
 4. **Search:** brute-force dot product against every stored vector, held in
    memory after the first load. ANN is the scale plan, not this build.
-5. **Ingest is synchronous:** download → S3 → embed → DynamoDB → respond.
+5. **Ingest is synchronous:** download → decode and embed → S3 → DynamoDB →
+   respond, so a 422 leaves nothing behind (refined by decision 10).
 6. **API:**
    - `POST /search` keeps the kit's request/response shape
      (`{ query, limit }` → `{ query, count, results: [{ id, url, description, score }] }`).
@@ -134,7 +135,15 @@ There are two kinds, and they are handled differently:
   512-number vectors exceed that, so results would be **silently truncated**.
   The real loader must page through `LastEvaluatedKey` until it is absent.
 - **Cache freshness.** The in-memory vector cache must include images ingested
-  after it was loaded, so update it on ingest. With multiple Lambda instances,
+  after it was loaded, so update it on ingest. "Loaded" is a separate flag, set
+  only after a full paginated Scan completes, and it decides whether a search
+  waits for the load. A non-empty cache does not mean loaded. Ingest always
+  adds to the cache. The Scan only adds records the cache doesn't already have,
+  so it never overwrites a newer copy, and an image ingested mid-Scan is never
+  dropped. Concurrent searches during the first load share one in-flight Scan
+  (a single promise), not one each (decision 17). Delete has the reverse race:
+  a Scan page read before the delete could re-add the image, so delete must
+  track recent deletes until the load finishes. With multiple Lambda instances,
   each instance holds its own cache and they drift. That is one reason the scale
   plan uses a real vector store.
 - **Same model, same code.** Image vectors and query vectors must always come
@@ -143,6 +152,10 @@ There are two kinds, and they are handled differently:
 - **Routes live in three places.** A new route must be registered in
   `backend/handler.js` (`route`), `backend/local-server.js` (Express), **and**
   `scripts/deploy.sh` (`create-route`). Missing one fails silently on that path.
+- **Express 4 swallows async errors.** An async route handler that throws
+  leaves the request hanging, not failing. One shared error boundary around
+  `route` turns any unexpected error into `500 { "error": "internal error" }`
+  and logs the real error, for both the Express server and the Lambda handler.
 - **The kit's seed writes data directly.** `make seed` (`scripts/seed.js`)
   creates the table and bucket, then batch-writes `sample_images.json` straight
   into DynamoDB with no embeddings. That conflicts with decision 7. Table and
