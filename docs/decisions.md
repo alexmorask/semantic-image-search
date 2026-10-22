@@ -145,3 +145,11 @@ that planning session before the build started.
 **Tradeoff:** The first search waits for the full Scan. The load logic is a small state machine rather than a lazy fill. Delete (Backlog) has the reverse race and will need to track recent deletes until the load finishes.
 **Rejected:** Using a non-empty cache as the loaded signal (the partial-cache bug). Adding to the cache on ingest only once loaded (drops images ingested mid-Scan). One Scan per concurrent search (redundant reads, and racing fills).
 **AI vs. me:** The review agent found the partial-cache bug. The drafting agent found that the first fix could drop an image ingested mid-Scan and proposed the merge rule. I approved both.
+
+## 18. Core ticket order: pure logic, then the riskiest unit, then real data
+
+**Decision:** Vector math comes first, then the embedder, then ingest with the shared error boundary, then semantic search (the walking skeleton), then the bulk loader. Validation and download safeguards follow and are firmly core. The Lambda deploy is last, time-boxed to 15 minutes, and the first cut.
+**Rationale:** The embedder's acceptance check needs `normalize` and `dot`, and pure logic lands quickly test-first, so the riskiest unit (native dependencies, the model download, image decoding) still fails early if it's going to. The error boundary ships with ingest because Express 4 hangs on async errors and ingest is where debugging starts. The bulk loader comes before validation and safeguards so the demo runs on real data first. Decision 1 already makes the Lambda path best-effort.
+**Tradeoff:** Until tickets 8 and 9 land, the API accepts malformed input and unfetchable URLs without the spec's 400 and 422 responses. Both are still core, because the spec's API and decision 10 commit to that behavior.
+**Rejected:** The embedder before the vector math (its acceptance check needs `normalize` and `dot`). Validation and safeguards before real data (a stricter API sooner, but a weaker early demo). The error boundary in the validation ticket (too late: debugging starts at ingest).
+**AI vs. me:** The drafting agent proposed the order with the embedder first and validation as cuttable. I reordered vector math before the embedder, moved the error boundary into the ingest ticket, and made validation and the download safeguards firmly core.
