@@ -50,33 +50,19 @@ READ   POST /search
 
 ## API
 
-Errors are `{ "error": "<message>" }`. Malformed JSON returns **400**, and unexpected failures return **500**. **`GET /health`** is unchanged.
-
-**`POST /search`** keeps the kit's shape, so the frontend is unchanged.
+Errors are `{ "error": "<message>" }`; malformed JSON is **400**, unexpected failures **500**. `GET /health` is unchanged.
 
 ```
-request   { "query": "dog on a beach", "limit": 12 }
-200       { "query", "count", "results": [ { "id", "url", "description", "score" } ] }
+POST /search   { "query": "dog on a beach", "limit"?: 12, "minScore"?: 0.26 }
+           200 { "query", "count", "results": [ { "id", "url", "description", "score" } ] }
+POST /images   { "url": "https://…", "id"?, "description"?, "keywords"?: [] }
+           201 { "id", "url", "description", "embeddingModel", "createdAt" }
+DELETE /images/{id}   204
 ```
 
-- Results are sorted by `score` (cosine similarity). There's **no minimum score by default**, so weak matches still return, with low scores. An optional `minScore` in [-1, 1] drops results below it, so fewer than `limit` may return.
-- `limit` defaults to 12 and is capped at 50. **400** for a missing or empty `query`, a `limit` that isn't a positive integer, or a `minScore` that isn't a number in [-1, 1].
-
-**`POST /images`** ingests one image.
-
-```
-request   { "url": "https://…", "id"?, "description"?, "keywords"?: [] }
-201       { "id", "url", "description", "embeddingModel", "createdAt" }
-```
-
-- **400** for a missing or non-http(s) `url`, or an `id` that isn't 1–128 letters, digits, `-` or `_` (it becomes an S3 key). **422** if the image can't be downloaded (error, non-2xx, more than 10s, larger than 10MB) or decoded.
-- An existing `id` is replaced, so re-embedding after a model change is a re-ingest.
-- **Known gap:** the server fetches any URL it can reach, including internal ones (SSRF). Presigned uploads in the Scale plan fix this.
-
-**`DELETE /images/{id}`** removes one image: the DynamoDB record first (the source of truth), then the S3 original, then the cache entry.
-
-- **204** with no body on success, **404** if no image has that id, **400** for an `id` that fails the same rule as ingest.
-- A delete during the cache's initial load is remembered until the load finishes, so a Scan page read before the delete can't bring the image back.
+- **Search** keeps the kit's shape, so the frontend is unchanged. Results are sorted by `score` (cosine similarity). With no `minScore`, weak matches still return with low scores; `minScore` in [-1, 1] drops them. `limit` defaults to 12, capped at 50. **400** for an empty `query`, a non-positive-integer `limit`, or a bad `minScore`.
+- **Ingest:** **400** for a non-http(s) `url` or an `id` outside 1–128 letters, digits, `-`, `_` (it becomes an S3 key). **422** if the image can't be downloaded (error, non-2xx, over 10s or 10MB) or decoded. An existing `id` is replaced, so re-embedding is a re-ingest. **Known gap:** the server fetches any URL it can reach (SSRF); presigned uploads fix it.
+- **Delete** removes the DynamoDB record (the source of truth), then the S3 original, then the cache entry. **404** for an unknown id, **400** for a bad one. A delete during the cache's initial load is remembered, so the Scan can't bring the image back.
 
 ## Scale plan
 
@@ -115,12 +101,14 @@ request   { "url": "https://…", "id"?, "description"?, "keywords"?: [] }
 
 ## AI notes
 
-**Workflow:** two Claude agents. A drafting agent (Claude Code) writes the spec, code, and decisions. A review agent (a separate Claude) ran the up-front planning session and adversarially reviews the drafting agent's output. I direct both and make each call. Who proposed what is recorded per decision in `docs/decisions.md`.
+**Workflow:** two Claude agents. A drafting agent (Claude Code) writes the spec, code, and decisions; a review agent (a separate Claude) ran the planning session and adversarially reviews the drafts. Two parallel drafting subagents later built `minScore` and delete in separate git worktrees, merged after review. I direct them and make each call; `docs/decisions.md` records who proposed what.
 
-The agents also caught each other: the review agent found the partial-cache bug, and the drafting agent found that the first fix dropped images ingested mid-Scan (#17).
+**Where AI helped:** the core design (#1–7) and the detailed calls (#9–16); the implementation, test-first for pure logic and verified against LocalStack; research and debugging (measuring why the model can't fit in a Lambda, a spike proving the Lambda path, the Unsplash terms that forbid committing the sample (#20), tracing a browser 403 to LocalStack's CORS check); and review, where the agents caught each other's cache bugs (#17).
 
-**My own catches:**
-- **Scope framing (#8):** the planning prompt framed the out-of-scope features as "deferred to the live session". I overrode that as presumptuous, since I don't know what the panel will ask, and replaced it with a ranked backlog.
-- **No threshold (#12):** I asked what users would actually see when nothing matches, which put `minScore` in the Backlog.
-- **Vector store (#15):** my question about latency led to the docs check showing the real risk was recall, which changed the design to one index per Group.
-- **Latency figures:** I pushed back on committing to measured latency in the spec, because the assignment doesn't ask for it.
+**Where I corrected or overrode it:**
+- **Scope (#8):** "deferred to the live session" was presumptuous; I asked for a ranked backlog.
+- **Latency:** I declined to commit to latency figures the assignment doesn't ask for.
+- **No threshold (#12):** asking what users would see put `minScore` in the backlog (later built, #22).
+- **Vector store (#15):** my latency question exposed recall as the real risk, so search uses one index per Group.
+- **Build order (#18):** vector math before the embedder, the error boundary with ingest, and validation made core rather than cuttable.
+- **Lambda path (#24):** I weighed a Python service and async ingest first; my security question replaced loosening LocalStack's CORS with a same-origin proxy; my browser test caught a 403 the AI's `curl` checks missed.

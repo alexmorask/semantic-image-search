@@ -13,5 +13,8 @@
   "scripts": {
     "test": "node --test",
     "test:model": "node --test lib/embedding/local.model-check.js"
+  },
+  "engines": {
+    "node": ">=20.9.0"
   }
 }

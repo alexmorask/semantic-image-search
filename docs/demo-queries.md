@@ -1,8 +1,10 @@
 # Demo queries
 
-The fixed query set for development checks, `/finalize`, and the demo. Results are from 406 images: the
-400-image Unsplash sample (`make dataset` samples with a fixed seed, so it reproduces) plus 6 hand-picked
-images. Each was judged by looking at the images, not the captions. Queries are embedded as typed (decision 9).
+The fixed query set for development checks, `/finalize`, and the demo. Results are from the 400-image
+Unsplash sample (`make dataset` samples with a fixed seed, so it reproduces). They were chosen against 406 images
+(the sample plus 6 hand-picked ones), and re-verified at `/finalize` on a clean `make dataset` + `make ingest`:
+every top 3 below is identical. Each was judged by looking at the images, not the captions. Queries are embedded
+as typed (decision 9).
 
 | # | Shows | Query | Top 3 (score, caption) | What to say |
 | --- | --- | --- | --- | --- |
