@@ -17,6 +17,7 @@ that planning session before the build started.
 **Tradeoff:** A large first-load model download, and risky Lambda packaging (native binaries, architecture mismatch). That is why the local Express server is the demo path and the Lambda deploy is best-effort.
 **Rejected:** A hosted multimodal embedding API (signup, cost, and a network dependency during the live demo). A separate Python embedding service (an extra moving part for little gain at this size).
 **AI vs. me:** The review agent recommended transformers.js over a hosted API or a Python service in the planning session. I accepted it for a first pass.
+**Outcome (ticket 10):** The predicted Lambda failure, measured. `make deploy` built a 555MB zip (the 498MB of dependencies plus the 595MB model cache, which lives in `node_modules`), and CreateFunction rejected it: "Zipped size must be smaller than 52428800 bytes". Uploading via S3 would hit the 250MB unzipped limit next, the installed `sharp` is a macOS build, and free LocalStack doesn't implement API Gateway v2 (HTTP APIs), which `deploy.sh` uses. The answer is the spec's: the model belongs in a separate embedding service, not in the Lambda.
 
 ## 2. One DynamoDB table for records and vectors, with original bytes in S3
 

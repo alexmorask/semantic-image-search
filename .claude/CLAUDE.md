@@ -165,6 +165,10 @@ There are two kinds, and they are handled differently:
 - **Platform support.** `onnxruntime-node` 1.30 bundles binaries for macOS
   arm64, Linux and Windows, but appears to have none for Intel Macs (untested).
   `/finalize` notes this as a known limitation in the README.
+- **Lambda deploy doesn't work here (measured in ticket 10).** The zip is 555MB
+  against a 50MB direct-upload limit, the package is 1.1GB against the 250MB
+  unzipped limit, `sharp` is a macOS build, and free LocalStack doesn't
+  implement API Gateway v2. Don't retry it; the local server is the demo path.
 - **Lambda packaging.** transformers.js pulls in native binaries
   (onnxruntime-node, sharp) that may not match the Lambda architecture, and the
   kit deploys `nodejs18.x`. Don't sink time here. The local server is the demo
