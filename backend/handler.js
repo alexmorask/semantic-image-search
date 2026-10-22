@@ -1,5 +1,6 @@
 const { ScanCommand } = require("@aws-sdk/lib-dynamodb");
 const { ddb, TABLE } = require("./lib/ddb");
+const { ingestImage } = require("./lib/ingest");
 
 // Small sample => a Scan is fine. Real scale is a design discussion for the live round.
 async function loadItems() {
@@ -29,7 +30,7 @@ function naiveSearch(items, query, limit) {
     .slice(0, limit || 12);
 }
 
-async function route(method, path, body) {
+async function dispatch(method, path, body) {
   if (method === "GET" && path.endsWith("/health")) {
     return { statusCode: 200, body: { ok: true } };
   }
@@ -38,7 +39,28 @@ async function route(method, path, body) {
     const results = naiveSearch(items, body.query, body.limit);
     return { statusCode: 200, body: { query: body.query || "", count: results.length, results } };
   }
+  if (method === "POST" && path.endsWith("/images")) {
+    const { id, url, description, embeddingModel, createdAt } = await ingestImage(body);
+    return { statusCode: 201, body: { id, url, description, embeddingModel, createdAt } };
+  }
   return { statusCode: 404, body: { error: "not found" } };
+}
+
+/**
+ * Routes one request for both the Lambda handler and the local Express server.
+ * Any unexpected error is logged and becomes a 500, so a request never hangs or leaks internals.
+ * @param {string} method HTTP method.
+ * @param {string} path Request path.
+ * @param {object} body Parsed JSON body.
+ * @returns {Promise<{statusCode: number, body: object}>}
+ */
+async function route(method, path, body) {
+  try {
+    return await dispatch(method, path, body);
+  } catch (error) {
+    console.error(`${method} ${path} failed:`, error);
+    return { statusCode: 500, body: { error: "internal error" } };
+  }
 }
 
 // Lambda entrypoint (API Gateway v2 / Function URL event shape)
