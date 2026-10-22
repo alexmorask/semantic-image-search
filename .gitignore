@@ -5,3 +5,4 @@ data/embeddings.json
 data/unsplash_sample.json
 unsplash-lite/
 dist/
+.claude/worktrees/
