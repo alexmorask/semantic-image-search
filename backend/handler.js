@@ -1,20 +1,24 @@
 const { ingestImage } = require("./lib/ingest");
 const { searchImages } = require("./lib/search");
+const { validateSearch, validateIngest } = require("./lib/validation");
 
-const DEFAULT_LIMIT = 12;
-const MAX_LIMIT = 50;
+const INVALID_JSON = { statusCode: 400, body: { error: "request body must be valid JSON" } };
+const badRequest = (error) => ({ statusCode: 400, body: { error } });
 
 async function dispatch(method, path, body) {
   if (method === "GET" && path.endsWith("/health")) {
     return { statusCode: 200, body: { ok: true } };
   }
   if (method === "POST" && path.endsWith("/search")) {
-    const limit = Math.min(body.limit || DEFAULT_LIMIT, MAX_LIMIT);
-    const results = await searchImages(body.query, limit);
-    return { statusCode: 200, body: { query: body.query, count: results.length, results } };
+    const { value, error } = validateSearch(body);
+    if (error) return badRequest(error);
+    const results = await searchImages(value.query, value.limit);
+    return { statusCode: 200, body: { query: value.query, count: results.length, results } };
   }
   if (method === "POST" && path.endsWith("/images")) {
-    const { id, url, description, embeddingModel, createdAt } = await ingestImage(body);
+    const { value, error } = validateIngest(body);
+    if (error) return badRequest(error);
+    const { id, url, description, embeddingModel, createdAt } = await ingestImage(value);
     return { statusCode: 201, body: { id, url, description, embeddingModel, createdAt } };
   }
   return { statusCode: 404, body: { error: "not found" } };
@@ -30,7 +34,7 @@ async function dispatch(method, path, body) {
  */
 async function route(method, path, body) {
   try {
-    return await dispatch(method, path, body);
+    return await dispatch(method, path, body || {});
   } catch (error) {
     console.error(`${method} ${path} failed:`, error);
     return { statusCode: 500, body: { error: "internal error" } };
@@ -44,15 +48,23 @@ exports.handler = async (event) => {
     event.httpMethod ||
     "GET";
   const path = event.rawPath || event.path || "/";
-  let body = {};
-  try { body = event.body ? JSON.parse(event.body) : {}; } catch (e) {}
-  const r = await route(method, path, body);
+  let body;
+  try {
+    body = event.body ? JSON.parse(event.body) : {};
+  } catch {
+    return toLambdaResponse(INVALID_JSON);
+  }
+  return toLambdaResponse(await route(method, path, body));
+};
+
+function toLambdaResponse(r) {
   return {
     statusCode: r.statusCode,
     headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
     body: JSON.stringify(r.body),
   };
-};
+}
 
 // shared with the local dev server
 exports.route = route;
+exports.INVALID_JSON = INVALID_JSON;

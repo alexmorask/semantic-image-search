@@ -170,3 +170,11 @@ that planning session before the build started.
 **Tradeoff:** A reviewer has to download Unsplash Lite and run `make dataset` themselves to reproduce the 400-image demo.
 **Rejected:** Keeping the kit's output path and never committing the change (one `git add -A` publishes it).
 **AI vs. me:** The drafting agent found the terms while preparing to generate the data and proposed the separate git-ignored file; I accepted it.
+
+## 21. Restrict ids to a safe key format; malformed JSON is a 400
+
+**Decision:** An ingest `id` must be 1–128 letters, digits, `-` or `_`. A request body that isn't valid JSON returns `400 { "error": "request body must be valid JSON" }` from both the Lambda handler and the Express server.
+**Rationale:** The id is both the DynamoDB key and part of the S3 key `originals/{id}`, so a `/` or `..` would create nested or confusing keys. Unsplash ids and UUIDs fit the pattern. Before this, Express answered malformed JSON with an HTML error page, and the Lambda handler silently treated it as an empty body, which surfaced as a misleading "query is required".
+**Tradeoff:** A caller with ids in another format (e.g. containing `.` or `/`) must map them first.
+**Rejected:** Accepting any string id (odd S3 keys). Encoding the id into the S3 key (more to explain, for no current need).
+**AI vs. me:** Proposed by the drafting agent during ticket 8; I accepted it.

@@ -50,7 +50,7 @@ READ   POST /search
 
 ## API
 
-Errors are `{ "error": "<message>" }`. Unexpected failures return **500**. **`GET /health`** is unchanged.
+Errors are `{ "error": "<message>" }`. Malformed JSON returns **400**, and unexpected failures return **500**. **`GET /health`** is unchanged.
 
 **`POST /search`** keeps the kit's shape, so the frontend is unchanged.
 
@@ -69,7 +69,7 @@ request   { "url": "https://…", "id"?, "description"?, "keywords"?: [] }
 201       { "id", "url", "description", "embeddingModel", "createdAt" }
 ```
 
-- **400** for a missing or non-http(s) `url`. **422** if the image can't be downloaded (error, non-2xx, more than 10s, larger than 10MB) or decoded.
+- **400** for a missing or non-http(s) `url`, or an `id` that isn't 1–128 letters, digits, `-` or `_` (it becomes an S3 key). **422** if the image can't be downloaded (error, non-2xx, more than 10s, larger than 10MB) or decoded.
 - An existing `id` is replaced, so re-embedding after a model change is a re-ingest.
 - **Known gap:** the server fetches any URL it can reach, including internal ones (SSRF). Presigned uploads in the Scale plan fix this.
 
