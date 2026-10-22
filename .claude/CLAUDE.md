@@ -177,6 +177,10 @@ There are two kinds, and they are handled differently:
   functions, and better structure carry the meaning instead. When you touch kit
   code, don't add comments. Removing the kit's `TODO(candidate)` block when you
   replace it is expected.
+- **JSDoc on exported functions.** JSDoc is documentation, not a comment. Every
+  exported function gets a `/** … */` block covering its contract: what it does
+  in a line, `@param`, `@returns`, and `@throws` where it throws. Private
+  helpers whose names say what they do don't need one.
 - **Small, single-purpose units** with clear interfaces, each understandable and
   testable in isolation. Keep pure logic (normalize, similarity, ranking,
   request validation) separate from I/O (DynamoDB, S3, HTTP, the model) so it
