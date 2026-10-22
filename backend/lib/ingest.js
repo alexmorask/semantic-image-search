@@ -5,11 +5,13 @@ const { ddb, TABLE } = require("./ddb");
 const { s3, BUCKET } = require("./s3");
 const { downloadImage } = require("./download");
 const { EMBEDDING_MODEL, embedImage } = require("./embedder");
+const { imageCache } = require("./image-cache");
 
 const originalKey = (id) => `originals/${id}`;
 
 /**
- * Ingests one image: download, embed, store the original in S3, then write the record to DynamoDB.
+ * Ingests one image: download, embed, store the original in S3, write the record to DynamoDB,
+ * and add it to the search cache.
  * Embedding happens before anything is stored, so an unusable image leaves nothing behind.
  * An existing id is overwritten in both S3 and DynamoDB.
  * @param {{url: string, id?: string, description?: string, keywords?: string[]}} input
@@ -32,6 +34,7 @@ async function ingestImage({ url, id = randomUUID(), description = "", keywords 
   };
   await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: record.s3Key, Body: bytes, ContentType: contentType }));
   await ddb.send(new PutCommand({ TableName: TABLE, Item: record }));
+  imageCache.add(record);
   return record;
 }
 

@@ -1,43 +1,17 @@
-const { ScanCommand } = require("@aws-sdk/lib-dynamodb");
-const { ddb, TABLE } = require("./lib/ddb");
 const { ingestImage } = require("./lib/ingest");
+const { searchImages } = require("./lib/search");
 
-// Small sample => a Scan is fine. Real scale is a design discussion for the live round.
-async function loadItems() {
-  const out = await ddb.send(new ScanCommand({ TableName: TABLE }));
-  return out.Items || [];
-}
-
-// ---------------------------------------------------------------------------
-// TODO(candidate): replace this naive keyword match with real semantic search.
-//   1. Embed the incoming query with your chosen model or API.
-//   2. Score each image's embedding against the query (e.g. cosine similarity).
-//      Image embeddings can come from `make embeddings` (data/embeddings.json),
-//      or load them however your design calls for.
-//   3. Return the top N by score.
-// The naive version below only exists so the pipeline runs end to end today.
-// ---------------------------------------------------------------------------
-function naiveSearch(items, query, limit) {
-  const terms = String(query || "").toLowerCase().split(/\s+/).filter(Boolean);
-  return items
-    .map((it) => {
-      const hay = (String(it.description || "") + " " + (it.keywords || []).join(" ")).toLowerCase();
-      const score = terms.reduce((s, t) => s + (hay.includes(t) ? 1 : 0), 0);
-      return { id: it.id, url: it.url, description: it.description, score };
-    })
-    .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit || 12);
-}
+const DEFAULT_LIMIT = 12;
+const MAX_LIMIT = 50;
 
 async function dispatch(method, path, body) {
   if (method === "GET" && path.endsWith("/health")) {
     return { statusCode: 200, body: { ok: true } };
   }
   if (method === "POST" && path.endsWith("/search")) {
-    const items = await loadItems();
-    const results = naiveSearch(items, body.query, body.limit);
-    return { statusCode: 200, body: { query: body.query || "", count: results.length, results } };
+    const limit = Math.min(body.limit || DEFAULT_LIMIT, MAX_LIMIT);
+    const results = await searchImages(body.query, limit);
+    return { statusCode: 200, body: { query: body.query, count: results.length, results } };
   }
   if (method === "POST" && path.endsWith("/images")) {
     const { id, url, description, embeddingModel, createdAt } = await ingestImage(body);
