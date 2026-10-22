@@ -33,20 +33,29 @@ function validateSearch({ query, limit = DEFAULT_LIMIT, minScore = LOWEST_SCORE 
 }
 
 /**
- * Validates a POST /images body.
- * The id becomes a DynamoDB key and part of an S3 key, so it is limited to letters, digits, "-" and "_".
+ * Validates an image id. The id becomes a DynamoDB key and part of an S3 key,
+ * so it is limited to 1-128 letters, digits, "-" and "_".
+ * @param {unknown} id
+ * @returns {{value: string} | {error: string}} The id, or a message for a 400.
+ */
+function validateImageId(id) {
+  if (!isString(id) || !SAFE_ID.test(id)) return { error: "id must be 1-128 letters, digits, '-' or '_'" };
+  return { value: id };
+}
+
+/**
+ * Validates a POST /images body. An id is optional, but must pass validateImageId when given.
  * @param {{url?: unknown, id?: unknown, description?: unknown, keywords?: unknown}} body
  * @returns {{value: {url: string, id: string|undefined, description: string, keywords: string[]}} | {error: string}}
  *   The fields with optional ones defaulted, or a message for a 400.
  */
 function validateIngest({ url, id, description = "", keywords = [] }) {
   if (!isHttpUrl(url)) return { error: "url must be an http(s) URL" };
-  if (id !== undefined && !(isString(id) && SAFE_ID.test(id))) {
-    return { error: "id must be 1-128 letters, digits, '-' or '_'" };
-  }
+  const checkedId = id === undefined ? {} : validateImageId(id);
+  if (checkedId.error) return checkedId;
   if (!isString(description)) return { error: "description must be a string" };
   if (!Array.isArray(keywords) || !keywords.every(isString)) return { error: "keywords must be an array of strings" };
   return { value: { url, id, description, keywords } };
 }
 
-module.exports = { validateSearch, validateIngest };
+module.exports = { validateSearch, validateIngest, validateImageId };

@@ -21,6 +21,11 @@ app.post("/images", async (req, res) => {
   res.status(r.statusCode).json(r.body);
 });
 
+app.delete("/images/:id", async (req, res) => {
+  const r = await route("DELETE", req.path, {});
+  res.status(r.statusCode).json(r.body);
+});
+
 app.use((error, _req, res, next) => {
   if (error.type !== "entity.parse.failed") return next(error);
   res.status(INVALID_JSON.statusCode).json(INVALID_JSON.body);

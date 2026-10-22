@@ -90,3 +90,48 @@ test("entries keep only what search needs", async () => {
   await cache.ensureLoaded();
   assert.deepEqual(cache.all(), [{ id: "a", url: "https://img/a", description: "v1", embedding: [1, 0] }]);
 });
+
+test("remove drops an entry from a loaded cache", async () => {
+  const cache = createVectorCache(pagesFrom([image("a"), image("b")]).loadPages);
+  await cache.ensureLoaded();
+  cache.remove("a");
+  assert.deepEqual(descriptions(cache), { b: "v1" });
+});
+
+test("a record removed mid-scan is not re-added by a later page", async () => {
+  const betweenPages = gate();
+  const cache = createVectorCache(async function* () {
+    yield [image("a")];
+    await betweenPages.opened;
+    yield [image("deleted"), image("c")];
+  });
+  const loading = cache.ensureLoaded();
+  await new Promise(setImmediate);
+  cache.remove("deleted");
+  betweenPages.open();
+  await loading;
+  assert.deepEqual(descriptions(cache), { a: "v1", c: "v1" });
+});
+
+test("a record removed before the first load stays gone after it", async () => {
+  const cache = createVectorCache(pagesFrom([image("a"), image("deleted")]).loadPages);
+  cache.remove("deleted");
+  await cache.ensureLoaded();
+  assert.deepEqual(descriptions(cache), { a: "v1" });
+});
+
+test("re-adding a record removed mid-scan keeps the new copy", async () => {
+  const betweenPages = gate();
+  const cache = createVectorCache(async function* () {
+    yield [image("a")];
+    await betweenPages.opened;
+    yield [image("b", "stale")];
+  });
+  const loading = cache.ensureLoaded();
+  await new Promise(setImmediate);
+  cache.remove("b");
+  cache.add(image("b", "fresh"));
+  betweenPages.open();
+  await loading;
+  assert.deepEqual(descriptions(cache), { a: "v1", b: "fresh" });
+});

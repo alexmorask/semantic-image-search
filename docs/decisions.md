@@ -187,3 +187,11 @@ that planning session before the build started.
 **Tradeoff:** A strict `minScore` can return an empty list for a good query, and the caller must pick the number themselves.
 **Rejected:** A default threshold (decision 12's calibration problem). Accepting any finite number (silently returns everything or nothing). Filtering before `topK` (same result, no benefit).
 **AI vs. me:** Proposed by the drafting agent (a parallel subagent) during backlog item 1; I accepted it.
+
+## 23. Delete returns 204, removes the record before the original, and remembers deletes during the initial load
+
+**Decision:** `DELETE /images/{id}` returns 204 with no body on success and 404 if no image has that id. It deletes the DynamoDB record first (using `ReturnValues: ALL_OLD`, so one atomic call both deletes and tells us whether it existed), then the S3 original, then the cache entry. A delete made before the cache's initial load finishes is remembered until it does, so the Scan skips it (refines #17).
+**Rationale:** There is nothing useful to return after a delete, and 204 is the conventional answer. DynamoDB is the source of truth: if the S3 delete then fails, the orphaned original is found by the cleanup sweep, whereas deleting S3 first could leave a record whose original is gone and can't be re-embedded. Without remembering deletes, a Scan page read before the delete would put the image back into the cache.
+**Tradeoff:** A 404 for an unknown id means a retried delete reports 404 rather than success. The remembered-deletes set lives only until the first load completes.
+**Rejected:** 200 with the deleted record's summary (nothing a caller needs). Idempotent 204 for unknown ids (hides typos in ids). Deleting S3 first (risks an unrecoverable record). A GetItem before the delete (two calls and a race, where `ALL_OLD` does it in one).
+**AI vs. me:** Proposed by the drafting agent (a parallel subagent) during backlog item 2; I accepted it.

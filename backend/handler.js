@@ -1,10 +1,19 @@
 const { ingestImage } = require("./lib/ingest");
 const { searchImages } = require("./lib/search");
-const { validateSearch, validateIngest } = require("./lib/validation");
+const { deleteImage } = require("./lib/delete-image");
+const { validateSearch, validateIngest, validateImageId } = require("./lib/validation");
 const { UnusableImageError } = require("./lib/errors");
 
 const INVALID_JSON = { statusCode: 400, body: { error: "request body must be valid JSON" } };
+const IMAGE_PATH = /\/images\/([^/]+)$/;
 const badRequest = (error) => ({ statusCode: 400, body: { error } });
+
+async function remove(rawId) {
+  const { value: id, error } = validateImageId(rawId);
+  if (error) return badRequest(error);
+  if (!(await deleteImage(id))) return { statusCode: 404, body: { error: "image not found" } };
+  return { statusCode: 204 };
+}
 
 async function ingest(input) {
   try {
@@ -30,6 +39,9 @@ async function dispatch(method, path, body) {
     const { value, error } = validateIngest(body);
     if (error) return badRequest(error);
     return ingest(value);
+  }
+  if (method === "DELETE" && IMAGE_PATH.test(path)) {
+    return remove(path.match(IMAGE_PATH)[1]);
   }
   return { statusCode: 404, body: { error: "not found" } };
 }

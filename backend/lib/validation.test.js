@@ -1,6 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { validateSearch, validateIngest } = require("./validation");
+const { validateSearch, validateIngest, validateImageId } = require("./validation");
 
 test("validateSearch accepts a query and applies the default limit", () => {
   assert.deepEqual(validateSearch({ query: "a dog" }), { value: { query: "a dog", limit: 12, minScore: -1 } });
@@ -78,5 +78,16 @@ test("validateIngest rejects a description that isn't a string", () => {
 test("validateIngest rejects keywords that aren't an array of strings", () => {
   for (const keywords of ["dog", [1, 2], ["dog", null]]) {
     assert.match(validateIngest({ url, keywords }).error, /keywords/, `keywords ${JSON.stringify(keywords)}`);
+  }
+});
+
+test("validateImageId accepts a safe id", () => {
+  assert.deepEqual(validateImageId("droTbsEL2HA"), { value: "droTbsEL2HA" });
+});
+
+test("validateImageId rejects ids that aren't safe keys, with the same rule as ingest", () => {
+  for (const id of ["", "a/b", "../x", "has space", "x".repeat(129), undefined]) {
+    assert.match(validateImageId(id).error, /id/, `id ${JSON.stringify(id)}`);
+    if (id !== undefined) assert.equal(validateIngest({ url, id }).error, validateImageId(id).error);
   }
 });

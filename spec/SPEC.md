@@ -73,6 +73,11 @@ request   { "url": "https://…", "id"?, "description"?, "keywords"?: [] }
 - An existing `id` is replaced, so re-embedding after a model change is a re-ingest.
 - **Known gap:** the server fetches any URL it can reach, including internal ones (SSRF). Presigned uploads in the Scale plan fix this.
 
+**`DELETE /images/{id}`** removes one image: the DynamoDB record first (the source of truth), then the S3 original, then the cache entry.
+
+- **204** with no body on success, **404** if no image has that id, **400** for an `id` that fails the same rule as ingest.
+- A delete during the cache's initial load is remembered until the load finishes, so a Scan page read before the delete can't bring the image back.
+
 ## Scale plan
 
 *Reasoning, not built.* This build holds 400 images. Photobucket holds about 14B.
@@ -98,11 +103,10 @@ request   { "url": "https://…", "id"?, "description"?, "keywords"?: [] }
 
 ## Out of scope
 
-**Backlog:** buildable, but left out of the thin slice.
+**Backlog:** buildable, but left out of the thin slice. Delete and `minScore` were built from it (see the API).
 
 | Feature | Why it stays a small change |
 | --- | --- |
-| **Delete** | `id` is the key everywhere: `DeleteItem` + `DeleteObject originals/{id}` + `cache.delete(id)`. During the initial load, a Scan page read before the delete could re-add the image, so delete tracks recent deletes until the load finishes |
 | **Ownership / permissions** | Add `ownerId`/`groupId` at ingest and filter before scoring. This is the per-Group index, in miniature |
 | **Pagination** | Ranking is deterministic, so a cursor over the sorted list, returned in a new `nextCursor` field |
 | **Hybrid search** | Captions and keywords are already stored. Merge the two rankings by position (reciprocal rank fusion) |

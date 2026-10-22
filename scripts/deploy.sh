@@ -33,6 +33,7 @@ INT_ID=$($AWS apigatewayv2 create-integration --api-id "$API_ID" \
 $AWS apigatewayv2 create-route --api-id "$API_ID" --route-key 'GET /health'  --target "integrations/$INT_ID" >/dev/null
 $AWS apigatewayv2 create-route --api-id "$API_ID" --route-key 'POST /search' --target "integrations/$INT_ID" >/dev/null
 $AWS apigatewayv2 create-route --api-id "$API_ID" --route-key 'POST /images' --target "integrations/$INT_ID" >/dev/null
+$AWS apigatewayv2 create-route --api-id "$API_ID" --route-key 'DELETE /images/{id}' --target "integrations/$INT_ID" >/dev/null
 $AWS apigatewayv2 create-stage --api-id "$API_ID" --stage-name '$default' --auto-deploy >/dev/null
 $AWS lambda add-permission --function-name image-search --statement-id apigw \
   --action lambda:InvokeFunction --principal apigateway.amazonaws.com >/dev/null 2>&1 || true
