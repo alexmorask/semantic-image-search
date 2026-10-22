@@ -4,7 +4,7 @@ const { PutObjectCommand } = require("@aws-sdk/client-s3");
 const { ddb, TABLE } = require("./ddb");
 const { s3, BUCKET } = require("./s3");
 const { downloadImage } = require("./download");
-const { EMBEDDING_MODEL, embedImage } = require("./embedder");
+const { EMBEDDING_MODEL, embedImage } = require("./embedding");
 const { imageCache } = require("./image-cache");
 
 const originalKey = (id) => `originals/${id}`;

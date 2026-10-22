@@ -88,7 +88,7 @@ request   { "url": "https://…", "id"?, "description"?, "keywords"?: [] }
 | **Retrieval** | Brute force in memory | S3 Vectors' built-in ANN, inside one Group's index |
 | **Scope** | One shared collection | **One index per Group** |
 | **Ingest** | Synchronous, server fetches the URL | Presigned S3 upload → S3 event → SQS → embedding workers |
-| **Embedding** | In the API process | A separate, versioned GPU service |
+| **Embedding** | In the API process locally; on the Lambda path, a separate embedding service over HTTP | A separate, versioned GPU service |
 | **Model change** | Re-ingest through `POST /images` | A bulk re-embedding pipeline from the S3 originals |
 | **Hot path** | Query embedding | Group index lookup |
 | **Pagination** | None (`limit` ≤ 50) | A `(score, id)` cursor |

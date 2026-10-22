@@ -60,8 +60,9 @@ finished one with no spec.
   Express server in `backend/local-server.js` and the Lambda `handler` both call
   that same `route`, so there is one implementation and two entry points.
 - **The local Express server is the primary dev and demo path** (`make api` on
-  :3001). The Lambda deploy (`make deploy`) is best-effort. Keep it working if it
-  is cheap. It must not eat build time.
+  :3001), with CLIP in-process. The Lambda path (`make deploy`) is secondary: the
+  Lambda has no model and calls the embedding service (`make embed` on :3002)
+  over HTTP (decision 24).
 - **Storage:** DynamoDB table `images` and S3 bucket `images` on LocalStack
   (`make up`, endpoint `http://localhost:4566`, credentials `test`/`test`).
 - **Frontend:** the kit's React/Vite app (`make web` on :5173). It calls
@@ -149,9 +150,10 @@ There are two kinds, and they are handled differently:
 - **Same model, same code.** Image vectors and query vectors must always come
   from the same model through the same code path. Store `embeddingModel` on
   every record. Never compare vectors across models.
-- **Routes live in three places.** A new route must be registered in
-  `backend/handler.js` (`route`), `backend/local-server.js` (Express), **and**
-  `scripts/deploy.sh` (`create-route`). Missing one fails silently on that path.
+- **Routes live in two places.** A new route must be registered in
+  `backend/handler.js` (`route`) **and** `backend/local-server.js` (Express).
+  The Lambda's Function URL sends every path to the handler, so `deploy.sh` has
+  no per-route list.
 - **Express 4 swallows async errors.** An async route handler that throws
   leaves the request hanging, not failing. One shared error boundary around
   `route` turns any unexpected error into `500 { "error": "internal error" }`
@@ -165,14 +167,18 @@ There are two kinds, and they are handled differently:
 - **Platform support.** `onnxruntime-node` 1.30 bundles binaries for macOS
   arm64, Linux and Windows, but appears to have none for Intel Macs (untested).
   `/finalize` notes this as a known limitation in the README.
-- **Lambda deploy doesn't work here (measured in ticket 10).** The zip is 555MB
-  against a 50MB direct-upload limit, the package is 1.1GB against the 250MB
-  unzipped limit, `sharp` is a macOS build, and free LocalStack doesn't
-  implement API Gateway v2. Don't retry it; the local server is the demo path.
-- **Lambda packaging.** transformers.js pulls in native binaries
-  (onnxruntime-node, sharp) that may not match the Lambda architecture, and the
-  kit deploys `nodejs18.x`. Don't sink time here. The local server is the demo
-  path.
+- **Never put the model in the Lambda (measured in ticket 10).** With
+  transformers.js the zip was 555MB against a 50MB upload limit, and `sharp` is a
+  macOS build. The Lambda zip is `handler.js` + `lib` only (about 12KB); the
+  nodejs20.x runtime provides the AWS SDK. Anything that `require`s
+  `lib/embedder.js` must stay off the Lambda path (`lib/embedding.js` switches).
+- **Lambda path needs three things running:** LocalStack, the embedding service
+  (`make embed`), and the frontend through the proxy (`make web-lambda
+  LAMBDA_URL=…`). Free LocalStack has no API Gateway v2 (the Lambda uses a
+  Function URL), and its gateway blocks browser origins such as
+  `localhost:5173`, checking `Origin` and, when it's absent, `Referer`. Don't
+  loosen that with `EXTRA_CORS_ALLOWED_ORIGINS`; the Vite proxy strips both
+  headers. Test browser paths with browser headers, not a bare `curl`.
 
 ## Code conventions
 

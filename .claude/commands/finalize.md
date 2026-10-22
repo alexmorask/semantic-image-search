@@ -34,7 +34,9 @@ where practical, and watch it succeed:
    unfetchable image → 422.
 5. Run the tests: `node --test` from `backend/`.
 6. Run the frontend (`make web`) and confirm it returns results.
-7. Try `make deploy` only if time allows. Report its real state either way.
+7. Verify the Lambda path: `make embed`, `make deploy`, then search and ingest
+   through the Function URL and the frontend via `make web-lambda`. Report its
+   real state either way.
 
 Document only commands you watched succeed. If one fails, fix it or document
 the real state. Don't paper over it.

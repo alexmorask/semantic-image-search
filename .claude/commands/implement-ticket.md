@@ -44,8 +44,7 @@ Don't fabricate tests that a file exists.
 
 Watch for the known pitfalls in `CLAUDE.md`, especially Scan pagination, cache
 freshness on ingest, the same model and code for both vector sides, and
-registering new routes in all three places (`handler.js`, `local-server.js`,
-`deploy.sh`).
+registering new routes in both places (`handler.js` and `local-server.js`).
 
 A new dependency must earn its place. Record it with the **recording-decisions**
 skill before adding it.

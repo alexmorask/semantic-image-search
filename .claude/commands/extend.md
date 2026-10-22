@@ -21,8 +21,8 @@ If that is empty, ask for it in one line and stop.
 - **Name the files** it touches, and the change in each, in a short list. Check the
   Backlog section of `docs/roadmap.md` first. If this is a backlog item, the
   plan is already sketched there, so use it.
-- If it adds a route, list all three places: `backend/handler.js`,
-  `backend/local-server.js`, and `scripts/deploy.sh`.
+- If it adds a route, list both places: `backend/handler.js` and
+  `backend/local-server.js`.
 
 Then proceed straight away. I'll interrupt if the restatement is wrong.
 

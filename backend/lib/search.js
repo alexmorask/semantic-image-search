@@ -1,4 +1,4 @@
-const { embedText } = require("./embedder");
+const { embedText } = require("./embedding");
 const { imageCache } = require("./image-cache");
 const { topK } = require("./vectors");
 

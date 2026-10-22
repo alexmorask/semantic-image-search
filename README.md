@@ -23,7 +23,7 @@ Replace the naive search with real semantic search, and make the design your own
 ## Prerequisites
 - Docker and Docker Compose
 - Node 18+
-- AWS CLI or `awslocal` (only needed for `make deploy`)
+- AWS CLI (only needed for `make deploy`)
 - Python 3 (only for the dataset and embedding scripts)
 
 ## Quickstart
@@ -43,9 +43,11 @@ Load the 400-image Unsplash sample (download Unsplash Lite and unzip it into ./u
 make dataset     # sample 400 images into data/unsplash_sample.json (git-ignored)
 make ingest      # with make api running: POST /images for every image in the sample
 ```
-Deploy to LocalStack Lambda + API Gateway (serverless path):
+Serverless path: the same handler on LocalStack Lambda, with the model in a separate embedding service:
 ```
-make deploy      # prints the HTTP API id; point VITE_API_BASE at it
+make embed       # terminal 3: embedding service on :3002 (CLIP)
+make deploy      # 12KB Lambda behind a Function URL; prints the URL
+make web-lambda LAMBDA_URL=<printed url>   # frontend proxied to the Lambda
 ```
 
 ## Layout

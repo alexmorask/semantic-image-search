@@ -7,8 +7,8 @@ const {
 } = require("@huggingface/transformers");
 const { normalize } = require("./vectors");
 const { UnusableImageError } = require("./errors");
+const { EMBEDDING_MODEL } = require("./model");
 
-const EMBEDDING_MODEL = "Xenova/clip-vit-base-patch32";
 const MODEL_OPTIONS = { dtype: "fp32" };
 
 let loading;

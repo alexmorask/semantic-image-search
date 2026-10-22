@@ -37,9 +37,8 @@ Respect these constraints when ordering:
   direct-to-database shortcut for real data.
 - The paginated Scan loader and the cache update on ingest are core, not polish.
   They are known pitfalls.
-- Registering routes in `deploy.sh` belongs with the route's ticket. Actually
-  exercising the Lambda deploy is its own late, best-effort ticket, and the
-  first one to cut.
+- Exercising the Lambda path (`make embed`, `make deploy`, `make web-lambda`) is
+  its own late ticket, and the first one to cut.
 
 ## Ticket shape
 
