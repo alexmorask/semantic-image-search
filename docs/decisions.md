@@ -85,6 +85,7 @@ that planning session before the build started.
 **Tradeoff:** If the template helps, the first runs rank short queries slightly worse until it's adopted.
 **Rejected:** Adopting the template from the start (an assumption, not evidence).
 **AI vs. me:** The drafting agent proposed raw-first with the template tested against the demo set; I accepted it.
+**Outcome (ticket 7):** The template was better on 1 of 15 queries, worse on 2 (it dropped the only relevant image for one), and tied on 12, judged by viewing the images. Queries stay raw. Details in `docs/demo-queries.md`.
 
 ## 10. Embed before storing in ingest (refines #5)
 
